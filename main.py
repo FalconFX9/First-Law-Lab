@@ -89,8 +89,11 @@ def results_filling(file, experiment):
     row_data = convert_to_single_list(col_data)
     # plot([T1, T_WALL, T_TOP_PLATE, T_BOT_PLATE], series, row_data)
     plot([P1, MASS_FLOW], series, row_data)
+    plt.xlabel("Time (s)")
+    plt.title(f"Experiment {experiment.upper()}, Part 1")
+    plt.savefig(f'Results\Experiment {experiment.upper()}-Part 1.png')
     plt.show()
-    print(f"Total Mass Added (Experiment {experiment}): {integrate(MASS_FLOW, row_data)}g")
+    print(f"Total Mass Added (Experiment {experiment.upper()}): {integrate(MASS_FLOW, row_data)}g")
 
 
 def results_heating(file, experiment):
@@ -103,6 +106,9 @@ def results_heating(file, experiment):
     #plt.legend(["Heat Energy(kJ)", "Heater Power (kW)"])
     #plt.show()
     plot([P1, T1, T_WALL, T_TOP_PLATE, T_BOT_PLATE, HEAT_ENERGY], series, row_data)
+    plt.xlabel("Time (s)")
+    plt.title(f"Experiment {experiment.upper()}, Part 2")
+    plt.savefig(f"Results\Experiment {experiment.upper()}-Part 2.png")
     plt.show()
     # print(f"Total Mass Added (Experiment {experiment}): {integrate(MASS_FLOW, row_data)}g")
 
