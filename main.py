@@ -121,6 +121,6 @@ def show_results_heating():
     results_heating("First Law Data\Lab 2-Part 2d", 'd')
 
 
-#show_results_filling()
+show_results_filling()
 show_results_heating()
 #split_experiment_b_2_files()
