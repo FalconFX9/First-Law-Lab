@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 
 # Element Numbers
@@ -12,6 +13,8 @@ P1 = 5
 P2 = 6
 MASS_FLOW = 7
 HEAT_ENERGY = 8
+START_TIMES = {'a': 143.20, 'b': 95.1, 'c': 128, 'd': 105}
+TANK_TEMPS = {'a': 40, 'b': 40, 'c': 60, 'd': 60}
 
 
 def get_data(file):
@@ -65,6 +68,41 @@ def derive(element_num, data):
     return derivative
 
 
+def get_average_power(t0, data):
+    start_index = data[TIME].index(t0)
+    dT = data[TIME][-1] - t0
+    dP = data[HEAT_ENERGY][-1] - data[HEAT_ENERGY][start_index]
+    return 1000*dP/dT
+
+
+def get_cylinder_heat_loss(t_tank):
+    k_acryl = 0.185
+    k_uncert = 0.015
+    t_ambient = 22.6
+    t_uncert = 0.05
+    l = 0.28575
+    l_uncert = 2.54E-5
+    r2 = 0.2032/2
+    r2_uncert = 0.001143
+    r1 = r2 - 0.009525
+    r1_uncert = math.sqrt(r2_uncert**2 + (0.009525*0.15)**2)
+    ln_uncert = get_uncert(r2/r1, r1, r2, r1_uncert, r2_uncert)
+    fraction_result = r2/r1
+    ln_result = math.log(r2/r1, math.e)
+    ln_uncert = ln_uncert/fraction_result
+    dT = t_tank-t_ambient
+    dT_uncert = math.sqrt(0.05**2 + 0.05**2)
+    fract_uncert = get_uncert(dT/ln_result, dT, fraction_result, dT_uncert, ln_uncert)
+    fract_result = dT/ln_result
+    Q = 2*math.pi*k_acryl*l*(dT/math.log((r2/r1), math.e))
+    Q_uncert = Q*math.sqrt((k_uncert/k_acryl)**2 + (l_uncert/l)**2 + (fract_uncert/fract_result)**2)
+    return Q, Q_uncert
+
+
+def get_uncert(result, val1, val2, uncert1, uncert2):
+    return result*math.sqrt((uncert1/val1)**2 + (uncert2/val2)**2)
+
+
 def convert_to_single_list(data):
     new_data = []
     for x in range(len(data[0])):
@@ -110,6 +148,12 @@ def results_heating(file, experiment):
     plt.title(f"Experiment {experiment.upper()}, Part 2")
     plt.savefig(f"Results\Experiment {experiment.upper()}-Part 2.png")
     plt.show()
+    avg_power = get_average_power(START_TIMES[experiment], row_data)
+    print(f"Experiment {experiment.upper()}:")
+    print(f"Average Power needed to maintain constant temperature: {round(avg_power, 1)}W")
+    cylinder_heat_loss_theoretical, uncert = get_cylinder_heat_loss(TANK_TEMPS[experiment])
+    print(f"Theoretical Cylinder Walls Heat Loss: {round(cylinder_heat_loss_theoretical, 1)}W +/- {uncert}W")
+    print(f"Top and Bottom Plate Losses: {round(avg_power-cylinder_heat_loss_theoretical, 1)}W")
     # print(f"Total Mass Added (Experiment {experiment}): {integrate(MASS_FLOW, row_data)}g")
 
 
@@ -127,6 +171,6 @@ def show_results_heating():
     results_heating("First Law Data\Lab 2-Part 2d", 'd')
 
 
-show_results_filling()
+#show_results_filling()
 show_results_heating()
 #split_experiment_b_2_files()
