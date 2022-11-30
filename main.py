@@ -15,6 +15,10 @@ MASS_FLOW = 7
 HEAT_ENERGY = 8
 START_TIMES = {'a': 143.20, 'b': 95.1, 'c': 128, 'd': 105}
 TANK_TEMPS = {'a': 40, 'b': 40, 'c': 60, 'd': 60}
+T_AMBIENT = 22.1
+AVG_POWER_RESULTS = {'a': 115, 'b': 119, 'c': 194, 'd': 227}
+MASS_RESULTS = {'a': 22, 'b': 44, 'c': 22, 'd': 44}
+TIMES = {'a': (16, 56), 'b': (0, 40), 'c': (6, 46), 'd': (2, 42)}
 
 
 def get_data(file):
@@ -56,7 +60,7 @@ def integrate(element_num, data):
     DT = 0.1
     total = 0
     for datapoint in data[element_num]:
-        total += datapoint * DT
+        total += datapoint/60 * DT
     return total
 
 
@@ -103,6 +107,14 @@ def get_uncert(result, val1, val2, uncert1, uncert2):
     return result*math.sqrt((uncert1/val1)**2 + (uncert2/val2)**2)
 
 
+def calculate_cv(times, m, data):
+    i0 = data[TIME].index(times[0])
+    iN = data[TIME].index(times[1])
+    dQ = data[HEAT_ENERGY][iN] - data[HEAT_ENERGY][i0]
+    dT = data[T1][iN] - data[T1][i0]
+    return dQ/(dT*(m/1000))
+
+
 def convert_to_single_list(data):
     new_data = []
     for x in range(len(data[0])):
@@ -132,6 +144,8 @@ def results_filling(file, experiment):
     plt.savefig(f'Results\Experiment {experiment.upper()}-Part 1.png')
     plt.show()
     print(f"Total Mass Added (Experiment {experiment.upper()}): {integrate(MASS_FLOW, row_data)}g")
+    # cv = calculate_cv(TANK_TEMPS[experiment]-T_AMBIENT, integrate(MASS_FLOW, row_data), AVG_POWER_RESULTS[experiment])
+    # print(f"Experimentally calculated Cv is: {cv}W/kg*K")
 
 
 def results_heating(file, experiment):
@@ -154,7 +168,7 @@ def results_heating(file, experiment):
     cylinder_heat_loss_theoretical, uncert = get_cylinder_heat_loss(TANK_TEMPS[experiment])
     print(f"Theoretical Cylinder Walls Heat Loss: {round(cylinder_heat_loss_theoretical, 1)}W +/- {uncert}W")
     print(f"Top and Bottom Plate Losses: {round(avg_power-cylinder_heat_loss_theoretical, 1)}W")
-    # print(f"Total Mass Added (Experiment {experiment}): {integrate(MASS_FLOW, row_data)}g")
+    print(f"Experimental Cv (Experiment {experiment}): {calculate_cv(TIMES[experiment], MASS_RESULTS[experiment], row_data)}kJ/kg*K")
 
 
 def show_results_filling():
